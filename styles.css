@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap");
+
+body {
+  font-size: Arial, sans-serif;
+  text-align: center;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  margin: 0;
+  padding: 0;
+}
+
+.unifrakturmaguntia-regular {
+  font-family: "UnifrakturMaguntia", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+h1.unifrakturmaguntia-regular {
+  font-size: 3em;
+}
+
+#game {
+  margin: 20px auto;
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #34495e;
+}
+
+#dealer,
+#player {
+  margin-bottom: 20px;
+}
+
+#controls button {
+  margin: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #16a095;
+  color: white;
+}
+
+#controls button:hover {
+  background-color: #1abc9c;
+}
+
+.card {
+  display: inline-block;
+  width: 50px;
+  height: 70px;
+  margin: 5px;
+  border-radius: 5px;
+  background-color: white;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
