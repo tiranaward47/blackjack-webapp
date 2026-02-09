@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="assets/apple-touch-icon.png"
+    />
     <link
       rel="icon"
       type="image/png"
@@ -17,38 +21,28 @@
       href="assets/favicon-16x16.png"
     />
     <link rel="manifest" href="assets/site.webmanifest" />
-
     <title>Ward's Blackjack</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-
   <body>
     <h1 class="unifrakturmaguntia-regular">Welcome To Ward's Blackjack</h1>
-
     <div id="game">
-      <!-- BANKROLL / BETTING PANEL -->
-      <div id="bankroll-panel">
-        <div class="bankroll-row">
-          <strong>Chips:</strong>
-          <span id="bankroll">1000</span>
-        </div>
-
-        <div class="bankroll-row">
-          <strong>Current Bet:</strong>
-          <span id="current-bet">0</span>
-        </div>
-
-        <div class="chip-row">
-          <button class="chip" data-value="10">+10</button>
-          <button class="chip" data-value="25">+25</button>
-          <button class="chip" data-value="50">+50</button>
-          <button class="chip" data-value="100">+100</button>
-        </div>
-
-        <div class="bet-actions">
-          <button id="place-bet-btn">Deal</button>
-          <button id="clear-bet-btn">Clear Bet</button>
-        </div>
-
-        <div class="stats-row">
-          <span>Hands: <span id="hands-pl
+      <div id="dealer">
+        <h2>Dealer's Hand</h2>
+        <div id="dealer-hand"></div>
+        <p id="dealer-score"></p>
+      </div>
+      <div class="player">
+        <h2>Player's Hand</h2>
+        <div id="player-hand"></div>
+        <p id="player-score"></p>
+      </div>
+      <div id="controls">
+        <button id="hit-btn">Hit</button>
+        <button id="stand-btn">Stand</button>
+      </div>
+      <p id="message"></p>
+    </div>
+    <script src="blackjack.js"></script>
+  </body>
+</html>

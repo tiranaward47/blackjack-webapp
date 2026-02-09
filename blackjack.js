@@ -1,333 +1,140 @@
-// Ward's Blackjack — Betting + Chips + Animations + Stats
+let deckId = "";
+let playerHand = [];
+let dealerHand = [];
+const message = document.getElementById("message");
 
-const dealerHandEl = document.getElementById("dealer-hand");
-const playerHandEl = document.getElementById("player-hand");
-const dealerScoreEl = document.getElementById("dealer-score");
-const playerScoreEl = document.getElementById("player-score");
-const messageEl = document.getElementById("message");
+document.getElementById("hit-btn").addEventListener("click", async () => {
+  const newCard = await drawCards(deckId, 1);
+  playerHand.push(...newCard);
+  displayHand(playerHand, "player");
 
-const hitBtn = document.getElementById("hit-btn");
-const standBtn = document.getElementById("stand-btn");
+  const playerScore = calculateScore(playerHand);
 
-const bankrollEl = document.getElementById("bankroll");
-const currentBetEl = document.getElementById("current-bet");
-const handsPlayedEl = document.getElementById("hands-played");
-const recordEl = document.getElementById("record");
-
-const dealBtn = document.getElementById("place-bet-btn");
-const clearBetBtn = document.getElementById("clear-bet-btn");
-const resetBtn = document.getElementById("reset-btn");
-
-let bankroll = 1000;
-let currentBet = 0;
-
-let handsPlayed = 0;
-let wins = 0;
-let losses = 0;
-let pushes = 0;
-
-let deck = [];
-let dealerCards = [];
-let playerCards = [];
-let gameOver = true;
-
-// ---------- Deck / Card Helpers ----------
-function createDeck() {
-  const suits = ["hearts", "diamonds", "clubs", "spades"];
-  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-  const d = [];
-
-  for (const suit of suits) {
-    for (const rank of ranks) {
-      d.push({ suit, rank });
-    }
+  if (playerScore > 21) {
+    disableButtons();
+    playerLostGame("Player busts!");
   }
-  return d;
-}
+});
 
-function shuffleDeck(d) {
-  for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [d[i], d[j]] = [d[j], d[i]];
+document.getElementById("stand-btn").addEventListener("click", async () => {
+  message.textContent = "Dealer's turn...";
+  disableButtons();
+  // dealer draws cards until their score is 17 or higher
+  while (calculateScore(dealerHand) < 17) {
+    const newCard = await drawCards(deckId, 1);
+    dealerHand.push(...newCard);
+    displayHand(dealerHand, "dealer");
   }
-  return d;
+
+  // determine the winner
+  const playerScore = calculateScore(playerHand);
+  const dealerScore = calculateScore(dealerHand);
+
+  if (dealerScore > 21) {
+    playerWinGame("Dealer busts! Player wins! ");
+  } else if (playerScore > dealerScore) {
+    playerWinGame("Player wins!");
+  } else if (playerScore < dealerScore) {
+    playerLostGame("Dealer wins!");
+  } else {
+    playerLostGame("It's a tie, and you still lose your money!");
+  }
+});
+
+// function to get a shuffled deck
+async function getShuffledDeck() {
+  const response = await fetch(
+    "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
+  );
+
+  const data = await response.json();
+  message.textContent = "Deck shuffled! Ready to play!";
+
+  return data.deck_id;
 }
 
-function cardValue(rank) {
-  if (rank === "A") return 11;
-  if (rank === "K" || rank === "Q" || rank === "J") return 10;
-  return Number(rank);
+function displayHand(hand, name) {
+  // console.log(`${name.toLowerCase()}-hand`)
+  const handElement = document.getElementById(`${name.toLowerCase()}-hand`);
+  handElement.innerHTML = "";
+
+  hand.forEach((card) => {
+    const cardDiv = document.createElement("div");
+    cardDiv.classList.add("card");
+    cardDiv.style.backgroundImage = `url(${card.image})`;
+    cardDiv.style.backgroundSize = "cover";
+    handElement.appendChild(cardDiv);
+  });
+
+  message.textContent = `${name}'s hand is ready!`;
 }
 
-function handTotal(cards) {
-  let total = 0;
+async function drawCards(deckId, count = 1) {
+  const response = await fetch(
+    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=${count}`
+  );
+
+  const data = await response.json();
+
+  return data.cards;
+}
+
+// calculate score
+function calculateScore(hand) {
+  let score = 0;
   let aces = 0;
 
-  for (const c of cards) {
-    total += cardValue(c.rank);
-    if (c.rank === "A") aces++;
-  }
-
-  while (total > 21 && aces > 0) {
-    total -= 10; // make an Ace count as 1 instead of 11
-    aces--;
-  }
-  return total;
-}
-
-function isBlackjack(cards) {
-  return cards.length === 2 && handTotal(cards) === 21;
-}
-
-function drawCard() {
-  if (deck.length < 10) deck = shuffleDeck(createDeck());
-  return deck.pop();
-}
-
-// ---------- UI Helpers ----------
-function setMessage(text, kind = "") {
-  messageEl.className = "message";
-  if (kind) messageEl.classList.add(kind);
-  messageEl.textContent = text;
-}
-
-function updateBankrollUI() {
-  bankrollEl.textContent = bankroll;
-  currentBetEl.textContent = currentBet;
-  handsPlayedEl.textContent = handsPlayed;
-  recordEl.textContent = `${wins}-${losses}-${pushes}`;
-}
-
-function renderHand(el, cards) {
-  el.innerHTML = "";
-  for (const card of cards) {
-    const div = document.createElement("div");
-    div.className = "card animate-in";
-    div.style.backgroundImage = `url(images/${card.rank}_of_${card.suit}.png)`;
-    el.appendChild(div);
-  }
-}
-
-function clearHands() {
-  dealerCards = [];
-  playerCards = [];
-  dealerHandEl.innerHTML = "";
-  playerHandEl.innerHTML = "";
-  dealerScoreEl.textContent = "";
-  playerScoreEl.textContent = "";
-}
-
-// ---------- Round Flow ----------
-function lockControls(locked) {
-  hitBtn.disabled = locked;
-  standBtn.disabled = locked;
-}
-
-function resetRoundState() {
-  gameOver = true;
-  lockControls(true);
-}
-
-function startRound() {
-  if (currentBet <= 0) {
-    setMessage("Place a bet first.", "lose");
-    return;
-  }
-  if (currentBet > bankroll) {
-    setMessage("Bet exceeds your chips.", "lose");
-    return;
-  }
-
-  // Deduct bet at start
-  bankroll -= currentBet;
-  updateBankrollUI();
-
-  clearHands();
-
-  gameOver = false;
-  lockControls(false);
-
-  // New deck if needed
-  if (deck.length < 15) deck = shuffleDeck(createDeck());
-
-  // Deal 2 each
-  playerCards.push(drawCard(), drawCard());
-  dealerCards.push(drawCard(), drawCard());
-
-  renderHand(playerHandEl, playerCards);
-  renderHand(dealerHandEl, dealerCards);
-
-  playerScoreEl.textContent = `Player Total: ${handTotal(playerCards)}`;
-  dealerScoreEl.textContent = `Dealer Total: ${handTotal(dealerCards)}`;
-
-  // Check blackjack
-  const pBJ = isBlackjack(playerCards);
-  const dBJ = isBlackjack(dealerCards);
-
-  if (pBJ || dBJ) {
-    endRound();
-    return;
-  }
-
-  setMessage("Hit or Stand.", "");
-}
-
-function dealerPlay() {
-  while (handTotal(dealerCards) < 17) {
-    dealerCards.push(drawCard());
-  }
-}
-
-function payout(result) {
-  // bet was already deducted
-  if (result === "win") {
-    bankroll += currentBet * 2;
-    wins++;
-  } else if (result === "push") {
-    bankroll += currentBet;
-    pushes++;
-  } else if (result === "blackjack") {
-    bankroll += currentBet + Math.floor(currentBet * 1.5);
-    wins++;
-  } else {
-    losses++;
-  }
-}
-
-function endRound() {
-  if (gameOver) return;
-
-  dealerPlay();
-
-  renderHand(dealerHandEl, dealerCards);
-  renderHand(playerHandEl, playerCards);
-
-  const pTotal = handTotal(playerCards);
-  const dTotal = handTotal(dealerCards);
-
-  playerScoreEl.textContent = `Player Total: ${pTotal}`;
-  dealerScoreEl.textContent = `Dealer Total: ${dTotal}`;
-
-  const pBJ = isBlackjack(playerCards);
-  const dBJ = isBlackjack(dealerCards);
-
-  let result = "lose";
-  let msg = "Dealer wins.";
-  let kind = "lose";
-
-  if (pBJ && dBJ) {
-    result = "push";
-    msg = "Both Blackjack — Push.";
-    kind = "push";
-  } else if (pBJ) {
-    result = "blackjack";
-    msg = "Blackjack! You win (3:2).";
-    kind = "win";
-  } else if (dBJ) {
-    result = "lose";
-    msg = "Dealer Blackjack. You lose.";
-    kind = "lose";
-  } else if (pTotal > 21) {
-    result = "lose";
-    msg = "Bust. You lose.";
-    kind = "lose";
-  } else if (dTotal > 21) {
-    result = "win";
-    msg = "Dealer busts. You win!";
-    kind = "win";
-  } else if (pTotal > dTotal) {
-    result = "win";
-    msg = "You win!";
-    kind = "win";
-  } else if (pTotal < dTotal) {
-    result = "lose";
-    msg = "Dealer wins.";
-    kind = "lose";
-  } else {
-    result = "push";
-    msg = "Push (tie).";
-    kind = "push";
-  }
-
-  payout(result);
-
-  handsPlayed++;
-  setMessage(msg, kind);
-
-  // Reset bet after outcome
-  currentBet = 0;
-
-  updateBankrollUI();
-  resetRoundState();
-}
-
-function playerHit() {
-  if (gameOver) return;
-
-  playerCards.push(drawCard());
-  renderHand(playerHandEl, playerCards);
-
-  const total = handTotal(playerCards);
-  playerScoreEl.textContent = `Player Total: ${total}`;
-
-  if (total > 21) endRound();
-}
-
-function playerStand() {
-  if (gameOver) return;
-  endRound();
-}
-
-// ---------- Betting Controls ----------
-document.querySelectorAll(".chip").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    if (!gameOver) return;
-
-    const value = Number(btn.dataset.value);
-    if (currentBet + value <= bankroll) {
-      currentBet += value;
-      updateBankrollUI();
-
-      btn.classList.add("pop");
-      setTimeout(() => btn.classList.remove("pop"), 180);
-      setMessage("Click Deal when ready.", "");
+  hand.forEach((card) => {
+    const value = card.value;
+    if (["KING", "QUEEN", "JACK"].includes(value)) {
+      score += 10;
+    } else if (value === "ACE") {
+      aces += 1;
+      score += 11;
     } else {
-      setMessage("You can’t bet more than your chips.", "lose");
+      score += parseInt(card.value);
     }
   });
-});
 
-clearBetBtn.addEventListener("click", () => {
-  if (!gameOver) return;
-  currentBet = 0;
-  updateBankrollUI();
-  setMessage("Bet cleared.", "");
-});
+  // adjust score if aces make the total exceed 21
+  while (score > 21 && aces > 0) {
+    score -= 10;
+    aces -= 1;
+  }
 
-dealBtn.addEventListener("click", () => {
-  if (!gameOver) return;
-  startRound();
-});
+  return score;
+}
 
-resetBtn.addEventListener("click", () => {
-  bankroll = 1000;
-  currentBet = 0;
-  handsPlayed = wins = losses = pushes = 0;
+// helper function to disable the buttons
+function disableButtons() {
+  document.getElementById("hit-btn").disabled = true;
+  document.getElementById("stand-btn").disabled = true;
+  document.getElementById("hit-btn").style.backgroundColor = "#BFBFBF";
+  document.getElementById("stand-btn").style.backgroundColor = "#BFBFBF";
+}
 
-  deck = shuffleDeck(createDeck());
-  clearHands();
-  updateBankrollUI();
+// helper function to style player lost
+function playerLostGame(ctx) {
+  document.body.style.backgroundColor = "#9c2921";
+  document.getElementById("game").style.backgroundColor = "#c73126";
+  message.textContent = ctx;
+}
 
-  setMessage("Game reset. Place your bet to begin.", "");
-  resetRoundState();
-});
+// helper function to style player win
+function playerWinGame(ctx) {
+  document.body.style.backgroundColor = "#038C5A ";
+  document.getElementById("game").style.backgroundColor = "#04BF68";
+  message.textContent = ctx;
+}
 
-// ---------- Gameplay Buttons ----------
-hitBtn.addEventListener("click", playerHit);
-standBtn.addEventListener("click", playerStand);
+async function playGame() {
+  deckId = await getShuffledDeck();
 
-// ---------- Init ----------
-deck = shuffleDeck(createDeck());
-updateBankrollUI();
-resetRoundState();
-setMessage("Place your bet to begin.", "");
+  playerHand = await drawCards(deckId, 2);
+  dealerHand = await drawCards(deckId, 2);
+
+  displayHand(playerHand, "player");
+  displayHand(dealerHand, "dealer");
+}
+
+playGame();
