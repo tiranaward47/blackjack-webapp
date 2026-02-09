@@ -7,12 +7,64 @@ let playerHand = [];
 let dealerHand = [];
 let roundOver = false;
 
+// betting
+let bankroll = 500;
+let currentBet = 0;
+let betLocked = false;
+
 const hitBtn = document.getElementById("hit-btn");
 const standBtn = document.getElementById("stand-btn");
 const newGameBtn = document.getElementById("new-game-btn");
 const messageEl = document.getElementById("message");
 const playerScoreEl = document.getElementById("player-score");
 const dealerScoreEl = document.getElementById("dealer-score");
+
+// betting DOM
+const bankrollEl = document.getElementById("bankroll");
+const betAmountEl = document.getElementById("bet-amount");
+const placeBetBtn = document.getElementById("place-bet-btn");
+const clearBetBtn = document.getElementById("clear-bet-btn");
+const chipBtns = document.querySelectorAll(".chip");
+
+// init render + disable new game until round complete
+renderBankroll();
+disableNewGameButton();
+disableActionButtons();
+if (messageEl) messageEl.textContent = "Choose chips, then click Place Bet.";
+
+chipBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (betLocked) return;
+    const val = Number(btn.dataset.chip || 0);
+
+    // pop feedback
+    btn.classList.remove("pop");
+    void btn.offsetWidth;
+    btn.classList.add("pop");
+
+    addToBet(val);
+  });
+});
+
+if (clearBetBtn) {
+  clearBetBtn.addEventListener("click", () => {
+    if (!betLocked) clearBet();
+  });
+}
+if (placeBetBtn) {
+  placeBetBtn.addEventListener("click", () => {
+    if (betLocked) return;
+    if (currentBet <= 0) {
+      messageEl.textContent = "Place a bet to start the round.";
+      return;
+    }
+
+    // lock bet + start dealing
+    takeBetFromBankroll();
+    setBetLocked(true);
+    startNewRound();
+  });
+}
 
 hitBtn.addEventListener("click", async () => {
   if (roundOver) return;
@@ -30,14 +82,65 @@ standBtn.addEventListener("click", async () => {
 });
 
 newGameBtn.addEventListener("click", () => {
-  startNewRound();
+  // reset UI and allow betting again
+  roundOver = false;
+  clearHands();
+  resetTheme();
+  disableNewGameButton();
+  setBetLocked(false);
+  clearBet();
+  disableActionButtons();
+  messageEl.textContent = "Choose chips, then click Place Bet.";
 });
 
+// ----- betting helpers -----
+function renderBankroll() {
+  if (bankrollEl) bankrollEl.textContent = bankroll;
+  if (betAmountEl) betAmountEl.textContent = currentBet;
+}
+
+function setBetLocked(locked) {
+  betLocked = locked;
+  if (placeBetBtn) placeBetBtn.disabled = locked;
+  if (clearBetBtn) clearBetBtn.disabled = locked;
+  chipBtns.forEach((b) => (b.disabled = locked));
+}
+
+function clearBet() {
+  currentBet = 0;
+  renderBankroll();
+}
+
+function addToBet(amount) {
+  if (bankroll - currentBet - amount < 0) {
+    messageEl.textContent = "Not enough bankroll to add that chip.";
+    return;
+  }
+  currentBet += amount;
+  renderBankroll();
+}
+
+function takeBetFromBankroll() {
+  bankroll -= currentBet;
+  renderBankroll();
+}
+
+function payoutWin(multiplier = 2) {
+  // total returned: bet * multiplier (2 = 2:1)
+  bankroll += Math.floor(currentBet * multiplier);
+  renderBankroll();
+}
+
+function payoutPush() {
+  bankroll += currentBet;
+  renderBankroll();
+}
+
+// ----- game flow -----
 async function startNewRound() {
   roundOver = false;
   resetTheme();
   clearHands();
-  disableNewGameButton();
   enableActionButtons();
 
   deckId = await getShuffledDeck();
@@ -77,7 +180,7 @@ async function dealToPlayer() {
 }
 
 async function playDealer() {
-  // dealer draws cards until their score is 17 or higher
+  // dealer draws cards until score is 17 or higher
   while (calculateScore(dealerHand) < 17) {
     const newCard = await drawCards(deckId, 1);
     dealerHand.push(...newCard);
@@ -113,7 +216,7 @@ function checkForBlackjack() {
     roundOver = true;
     disableActionButtons();
     updateScores({ hideDealerHoleCard: false });
-    playerWinGame("Blackjack! Player wins!");
+    playerWinGame("Blackjack! Player wins!", true);
   } else if (dealerScore === 21) {
     roundOver = true;
     disableActionButtons();
@@ -122,15 +225,12 @@ function checkForBlackjack() {
   }
 }
 
-// function to get a shuffled deck
 async function getShuffledDeck() {
   const response = await fetch(
     "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
   );
-
   const data = await response.json();
   messageEl.textContent = "Deck shuffled! Ready to play!";
-
   return data.deck_id;
 }
 
@@ -140,7 +240,7 @@ function displayHand(hand, name) {
 
   hand.forEach((card) => {
     const cardDiv = document.createElement("div");
-    cardDiv.classList.add("card");
+    cardDiv.classList.add("card", "animate-in");
     cardDiv.style.backgroundImage = `url(${card.image})`;
     cardDiv.style.backgroundSize = "cover";
     handElement.appendChild(cardDiv);
@@ -151,9 +251,7 @@ async function drawCards(deckId, count = 1) {
   const response = await fetch(
     `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=${count}`
   );
-
   const data = await response.json();
-
   return data.cards;
 }
 
@@ -174,7 +272,7 @@ function calculateScore(hand) {
     }
   });
 
-  // adjust score if aces make the total exceed 21
+  // adjust score if aces make total exceed 21
   while (score > 21 && aces > 0) {
     score -= 10;
     aces -= 1;
@@ -232,25 +330,29 @@ function enableNewGameButton() {
   newGameBtn.disabled = false;
 }
 
-// helper function to style player lost
+// outcomes
 function playerLostGame(ctx) {
   document.body.style.backgroundColor = "#9c2921";
   document.getElementById("game").style.backgroundColor = "#c73126";
-  messageEl.textContent = `${ctx} Click New Game to play again.`;
+  messageEl.textContent = `${ctx} You lost $${currentBet}. Click New Game to bet again.`;
   enableNewGameButton();
 }
 
-// helper function to style player win
-function playerWinGame(ctx) {
+function playerWinGame(ctx, blackjack = false) {
   document.body.style.backgroundColor = "#038C5A";
   document.getElementById("game").style.backgroundColor = "#04BF68";
-  messageEl.textContent = `${ctx} Click New Game to play again.`;
+
+  payoutWin(blackjack ? 2.5 : 2);
+  messageEl.textContent = `${ctx} You won $${currentBet}${
+    blackjack ? " (+ blackjack payout)" : ""
+  }! Click New Game to bet again.`;
   enableNewGameButton();
 }
 
 function pushGame(ctx) {
   resetTheme();
-  messageEl.textContent = `${ctx} Click New Game to play again.`;
+  payoutPush();
+  messageEl.textContent = `${ctx} Bet returned. Click New Game to bet again.`;
   enableNewGameButton();
 }
 
@@ -258,5 +360,3 @@ function resetTheme() {
   document.body.style.backgroundColor = DEFAULT_BODY_COLOR;
   document.getElementById("game").style.backgroundColor = DEFAULT_GAME_COLOR;
 }
-
-startNewRound();
