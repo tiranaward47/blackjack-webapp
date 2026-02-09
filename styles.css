@@ -142,3 +142,40 @@ h1.unifrakturmaguntia-regular {
     transform: scale(1);
   }
 }
+
+/* Stats + message */
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#reset-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  background-color: #c0392b;
+  color: white;
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease, opacity 150ms ease;
+}
+#reset-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+#reset-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.message {
+  margin-top: 12px;
+  font-weight: 700;
+}
+.message.win { color: #2ecc71; }
+.message.lose { color: #e74c3c; }
+.message.push { color: #f1c40f; }
