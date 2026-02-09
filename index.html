@@ -1,44 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="assets/apple-touch-icon.png"
-    />
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png" />
-    <link rel="manifest" href="assets/site.webmanifest" />
-    <title>Ward's Blackjack</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <h1 class="unifrakturmaguntia-regular">Welcome To Ward's Blackjack</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png" />
+  <link rel="manifest" href="assets/site.webmanifest" />
+  <title>Ward's Blackjack</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1 class="unifrakturmaguntia-regular">Welcome To Ward's Blackjack</h1>
 
-    <div id="game">
-      <div id="dealer">
-        <h2>Dealer's Hand</h2>
-        <div id="dealer-hand"></div>
-        <p id="dealer-score"></p>
+  <div id="game">
+    <div id="bankroll-panel">
+      <div class="bankroll-row">
+        <span><strong>Bankroll:</strong> $<span id="bankroll">500</span></span>
+        <span><strong>Bet:</strong> $<span id="bet-amount">0</span></span>
       </div>
 
-      <div id="player">
-        <h2>Player's Hand</h2>
-        <div id="player-hand"></div>
-        <p id="player-score"></p>
+      <div class="chip-row">
+        <button class="chip" data-chip="5">$5</button>
+        <button class="chip" data-chip="25">$25</button>
+        <button class="chip" data-chip="50">$50</button>
+        <button class="chip" data-chip="100">$100</button>
       </div>
 
-      <div id="controls">
-        <button id="hit-btn">Hit</button>
-        <button id="stand-btn">Stand</button>
-        <button id="new-game-btn">New Game</button>
+      <div class="bet-actions">
+        <button id="clear-bet-btn">Clear Bet</button>
+        <button id="place-bet-btn">Place Bet</button>
       </div>
-
-      <p id="message"></p>
     </div>
 
-    <script src="blackjack.js"></script>
-  </body>
+    <div id="dealer">
+      <h2>Dealer's Hand</h2>
+      <div id="dealer-hand"></div>
+      <p id="dealer-score"></p>
+    </div>
+
+    <div id="player">
+      <h2>Your Hand</h2>
+      <div id="player-hand"></div>
+      <p id="player-score"></p>
+    </div>
+
+    <div id="controls">
+      <button id="hit-btn">Hit</button>
+      <button id="stand-btn">Stand</button>
+      <button id="new-game-btn">New Game</button>
+    </div>
+
+    <p id="message"></p>
+  </div>
+
+  <script src="blackjack.js"></script>
+</body>
 </html>
