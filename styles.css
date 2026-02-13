@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500&display=swap");
 
 /* ===== Base Reset ===== */
 * {
@@ -6,13 +6,15 @@
 }
 
 :root {
-  --bg1: #114b2f;
-  --bg2: #07130f;
+  --bg1: #0f3d2e;
+  --bg2: #06130f;
   --glass: rgba(255, 255, 255, 0.06);
   --border: rgba(255, 255, 255, 0.12);
   --text: rgba(255, 255, 255, 0.92);
   --muted: rgba(255, 255, 255, 0.72);
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --gold1: #f7d774;
+  --gold2: #d4af37;
 }
 
 /* ===== Page ===== */
@@ -22,38 +24,59 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   color: var(--text);
   background: radial-gradient(circle at top, var(--bg1), var(--bg2));
   text-align: center;
 }
 
-/* ===== Title Font ===== */
-.unifrakturmaguntia-regular {
-  font-family: "UnifrakturMaguntia", cursive;
-  font-weight: 400;
-  font-style: normal;
-}
-
-header {
+/* ===== Brand Header ===== */
+.brand-header {
   width: min(980px, 100%);
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  position: relative;
 }
 
-h1.unifrakturmaguntia-regular {
+.brand-title {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  letter-spacing: 1px;
+
+  background: linear-gradient(135deg, var(--gold1), var(--gold2));
+
+  /* Add BOTH of these */
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-/* Subtitle under title */
+
+/* Decorative gold underline */
+.brand-title::after {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 3px;
+  margin: 12px auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+  border-radius: 4px;
+}
+
+/* Subtitle */
 .subtitle {
-  margin: 6px 0 16px 0;
+  margin: 10px 0 0 0;
   color: var(--muted);
   font-size: 0.95rem;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
-/* ===== Game Card ===== */
+/* ===== Game Container ===== */
 #game {
   width: min(980px, 100%);
   margin: 0 auto;
@@ -66,7 +89,7 @@ h1.unifrakturmaguntia-regular {
   backdrop-filter: blur(10px);
 }
 
-/* ===== HUD / Betting ===== */
+/* ===== HUD ===== */
 #hud {
   display: flex;
   gap: 12px;
@@ -109,14 +132,12 @@ input {
 h2 {
   margin: 0 0 10px 0;
   font-size: 1.15rem;
-  text-align: left;
 }
 
 #dealer-score,
 #player-score {
   margin: 10px 0 0 0;
   color: var(--muted);
-  text-align: left;
 }
 
 /* Cards row */
@@ -147,7 +168,6 @@ h2 {
   display: block;
 }
 
-/* Hidden dealer card */
 .card.back {
   font-size: 2rem;
   color: rgba(255, 255, 255, 0.85);
@@ -173,7 +193,7 @@ button {
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 button:active {
@@ -193,7 +213,6 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.18);
   min-height: 44px;
-  text-align: center;
 }
 
 /* ===== Deal Animation ===== */
@@ -201,23 +220,13 @@ button:disabled {
   from {
     opacity: 0;
     transform: translateY(-10px) scale(0.98);
-    filter: blur(1px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
 .card.deal {
   animation: dealIn 220ms ease-out both;
-  will-change: transform, opacity, filter;
-}
-
-/* Motion accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .card.deal {
-    animation: none !important;
-  }
 }
