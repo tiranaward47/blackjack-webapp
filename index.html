@@ -27,7 +27,7 @@
     <title>Ward's Blackjack</title>
     <meta
       name="description"
-      content="A browser-based Blackjack game. Play against the dealer with Hit and Stand."
+      content="A browser-based Blackjack game with betting, chips, and dealer logic."
     />
 
     <link rel="stylesheet" href="styles.css" />
@@ -36,28 +36,112 @@
 
   <body>
     <header>
-      <h1 class="unifrakturmaguntia-regular">Welcome to Ward's Blackjack</h1>
+      <h1 class="unifrakturmaguntia-regular">
+        Welcome to Ward's Blackjack
+      </h1>
     </header>
 
     <main id="game" role="main" aria-label="Blackjack game">
+
+      <!-- ===== HUD / Betting Section ===== -->
+      <section id="hud" aria-label="Game status and betting">
+        <div class="hud-item">
+          Chips:
+          <strong><span id="chips">1000</span></strong>
+        </div>
+
+        <div class="hud-item">
+          Bet:
+          <input
+            id="bet"
+            type="number"
+            min="1"
+            step="1"
+            value="50"
+            aria-label="Bet amount"
+          />
+          <button id="placebet-btn" type="button">
+            Place Bet
+          </button>
+        </div>
+
+        <div class="hud-item">
+          Current Bet:
+          <strong><span id="current-bet">0</span></strong>
+        </div>
+      </section>
+
+      <!-- ===== Dealer Section ===== -->
       <section id="dealer" aria-label="Dealer hand">
         <h2>Dealer’s Hand</h2>
-        <div id="dealer-hand" aria-label="Dealer cards"></div>
-        <p id="dealer-score" aria-live="polite" aria-atomic="true"></p>
+
+        <div
+          id="dealer-hand"
+          class="cards"
+          aria-label="Dealer cards"
+        ></div>
+
+        <p
+          id="dealer-score"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          Score: 0
+        </p>
       </section>
 
+      <!-- ===== Player Section ===== -->
       <section class="player" aria-label="Player hand">
         <h2>Player’s Hand</h2>
-        <div id="player-hand" aria-label="Player cards"></div>
-        <p id="player-score" aria-live="polite" aria-atomic="true"></p>
+
+        <div
+          id="player-hand"
+          class="cards"
+          aria-label="Player cards"
+        ></div>
+
+        <p
+          id="player-score"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          Score: 0
+        </p>
       </section>
 
+      <!-- ===== Game Controls ===== -->
       <section id="controls" aria-label="Game controls">
-        <button id="hit-btn" type="button">Hit</button>
-        <button id="stand-btn" type="button">Stand</button>
+        <button id="newgame-btn" type="button">
+          New Game
+        </button>
+
+        <button
+          id="hit-btn"
+          type="button"
+          disabled
+        >
+          Hit
+        </button>
+
+        <button
+          id="stand-btn"
+          type="button"
+          disabled
+        >
+          Stand
+        </button>
       </section>
 
-      <p id="message" role="status" aria-live="polite" aria-atomic="true"></p>
+      <!-- ===== Status / Messages ===== -->
+      <p
+        id="message"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Click "New Game" to begin.
+      </p>
+
     </main>
   </body>
 </html>
