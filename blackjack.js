@@ -1,4 +1,4 @@
-// ===== Ward's Blackjack (Upgraded Step-by-step) =====
+// ===== Ward's Blackjack (Upgraded) =====
 
 // --- DOM ---
 const message = document.getElementById("message");
@@ -38,12 +38,7 @@ function syncBankUI() {
   currentBetEl.textContent = String(currentBet);
 }
 
-function setControlsState({
-  canBet,
-  canStart,
-  canHit,
-  canStand,
-} = {}) {
+function setControlsState({ canBet, canStart, canHit, canStand } = {}) {
   if (typeof canBet === "boolean") {
     betInput.disabled = !canBet;
     placeBetBtn.disabled = !canBet;
@@ -61,14 +56,18 @@ function resetTableUI() {
 }
 
 // Render cards into #dealer-hand / #player-hand.
-// Hides the dealer's 2nd card while the round is active and player hasn't stood.
+// Adds "deal" class + staggered delay for animation.
+// Hides dealer's 2nd card while hideSecondCard is true.
 function renderHand(cards, targetId, hideSecondCard = false) {
   const el = document.getElementById(targetId);
   el.innerHTML = "";
 
   cards.forEach((card, idx) => {
     const wrap = document.createElement("div");
-    wrap.className = "card";
+    wrap.className = "card deal";
+
+    // Stagger deal animation slightly per card
+    wrap.style.animationDelay = `${idx * 90}ms`;
 
     if (hideSecondCard && idx === 1) {
       wrap.classList.add("back");
@@ -88,9 +87,10 @@ function updateScores({ hideDealer = true } = {}) {
   const playerScore = calculateScore(playerHand);
   playerScoreEl.textContent = `Score: ${playerScore}`;
 
-  const dealerScore = hideDealer && dealerHand.length
-    ? calculateScore([dealerHand[0]])
-    : calculateScore(dealerHand);
+  const dealerScore =
+    hideDealer && dealerHand.length
+      ? calculateScore([dealerHand[0]])
+      : calculateScore(dealerHand);
 
   dealerScoreEl.textContent = `Score: ${dealerScore}`;
 }
@@ -130,6 +130,7 @@ function calculateScore(hand) {
     }
   });
 
+  // adjust score if aces make the total exceed 21
   while (score > 21 && aces > 0) {
     score -= 10;
     aces -= 1;
@@ -165,9 +166,13 @@ function unlockBet() {
   betLocked = false;
   syncBankUI();
 
-  // If you're broke, stop betting.
   if (chips <= 0) {
-    setControlsState({ canBet: false, canStart: false, canHit: false, canStand: false });
+    setControlsState({
+      canBet: false,
+      canStart: false,
+      canHit: false,
+      canStand: false,
+    });
     setMessage("You're out of chips. Refresh or add a reset option.");
     return;
   }
@@ -179,7 +184,7 @@ function unlockBet() {
     canStand: false,
   });
 
-  setMessage('Place a bet to start the next round.');
+  setMessage("Place a bet to start the next round.");
 }
 
 // ===== Round Flow =====
@@ -191,32 +196,30 @@ async function startNewRound() {
 
   roundActive = true;
 
-  // Disable starting again mid-round
   setControlsState({ canStart: false, canHit: false, canStand: false });
 
   setMessage("Shuffling deck...");
   deckId = await getShuffledDeck();
 
-  // Deal
+  // Deal 2 each
   playerHand = await drawCards(deckId, 2);
   dealerHand = await drawCards(deckId, 2);
 
+  // Dealer hides second card
   renderHand(playerHand, "player-hand", false);
   renderHand(dealerHand, "dealer-hand", true);
   updateScores({ hideDealer: true });
 
-  // Enable play
   setControlsState({ canHit: true, canStand: true });
 
-  // Check immediate blackjack
+  // Immediate blackjack check
   const playerScore = calculateScore(playerHand);
   if (playerScore === 21) {
-    // Reveal dealer and resolve
     await resolveAfterStand(true);
     return;
   }
 
-  setMessage('Round started. Hit or Stand.');
+  setMessage("Round started. Hit or Stand.");
 }
 
 async function onHit() {
@@ -260,7 +263,7 @@ async function resolveAfterStand(fromBlackjack) {
   const playerScore = calculateScore(playerHand);
   const dealerScore = calculateScore(dealerHand);
 
-  // If player had blackjack and dealer also does, push
+  // Blackjack push case
   if (fromBlackjack && playerScore === 21 && dealerScore === 21) {
     endRound("push", "Both have Blackjack — Push.");
     return;
@@ -280,9 +283,12 @@ async function resolveAfterStand(fromBlackjack) {
 function endRound(result, text) {
   roundActive = false;
 
-  // Payout (simple, net change at the end)
-  if (result === "win") chips += currentBet;
-  if (result === "lose") chips -= currentBet;
+  // Capture bet BEFORE we reset/unlock anything
+  const betUsed = currentBet;
+
+  // Payout
+  if (result === "win") chips += betUsed;
+  if (result === "lose") chips -= betUsed;
   // push => no change
 
   syncBankUI();
@@ -290,10 +296,10 @@ function endRound(result, text) {
   // Freeze play
   setControlsState({ canHit: false, canStand: false, canStart: false });
 
-  // Reset bet controls for next round
+  // Reset bet controls for next round (this resets currentBet)
   unlockBet();
 
-  setMessage(`${text} (Bet: ${currentBet || 0} | Chips: ${chips})`);
+  setMessage(`${text} (Bet: ${betUsed} | Chips: ${chips})`);
 }
 
 // ===== Event Listeners =====
@@ -323,7 +329,7 @@ function init() {
   syncBankUI();
   resetTableUI();
 
-  // Require bet before round
+  // Require bet before starting
   setControlsState({
     canBet: true,
     canStart: false,
@@ -331,7 +337,7 @@ function init() {
     canStand: false,
   });
 
-  setMessage('Place a bet to begin.');
+  setMessage("Place a bet to begin.");
 }
 
 init();
