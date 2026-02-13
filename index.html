@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Icons / PWA -->
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -21,28 +23,41 @@
       href="assets/favicon-16x16.png"
     />
     <link rel="manifest" href="assets/site.webmanifest" />
+
     <title>Ward's Blackjack</title>
+    <meta
+      name="description"
+      content="A browser-based Blackjack game. Play against the dealer with Hit and Stand."
+    />
+
     <link rel="stylesheet" href="styles.css" />
+    <script src="blackjack.js" defer></script>
   </head>
+
   <body>
-    <h1 class="unifrakturmaguntia-regular">Welcome To Ward's Blackjack</h1>
-    <div id="game">
-      <div id="dealer">
-        <h2>Dealer's Hand</h2>
-        <div id="dealer-hand"></div>
-        <p id="dealer-score"></p>
-      </div>
-      <div class="player">
-        <h2>Player's Hand</h2>
-        <div id="player-hand"></div>
-        <p id="player-score"></p>
-      </div>
-      <div id="controls">
-        <button id="hit-btn">Hit</button>
-        <button id="stand-btn">Stand</button>
-      </div>
-      <p id="message"></p>
-    </div>
-    <script src="blackjack.js"></script>
+    <header>
+      <h1 class="unifrakturmaguntia-regular">Welcome to Ward's Blackjack</h1>
+    </header>
+
+    <main id="game" role="main" aria-label="Blackjack game">
+      <section id="dealer" aria-label="Dealer hand">
+        <h2>Dealer’s Hand</h2>
+        <div id="dealer-hand" aria-label="Dealer cards"></div>
+        <p id="dealer-score" aria-live="polite" aria-atomic="true"></p>
+      </section>
+
+      <section class="player" aria-label="Player hand">
+        <h2>Player’s Hand</h2>
+        <div id="player-hand" aria-label="Player cards"></div>
+        <p id="player-score" aria-live="polite" aria-atomic="true"></p>
+      </section>
+
+      <section id="controls" aria-label="Game controls">
+        <button id="hit-btn" type="button">Hit</button>
+        <button id="stand-btn" type="button">Stand</button>
+      </section>
+
+      <p id="message" role="status" aria-live="polite" aria-atomic="true"></p>
+    </main>
   </body>
 </html>
